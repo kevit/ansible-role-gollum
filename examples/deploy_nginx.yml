@@ -1,0 +1,22 @@
+- hosts: all
+  tasks:
+    - name: install nginx packages
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop:
+        - nginx
+    - name: Create nginx vhost config
+      template:
+        src: gollum.conf.j2
+        dest: /etc/nginx/sites-enabled/gollum.conf
+    - name: unlink default
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+    - name: reload service nginx
+      become: true
+      systemd:
+        name: nginx
+        state: restarted

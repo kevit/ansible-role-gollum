@@ -1,0 +1,60 @@
+---
+- name: Ensure packages are installed 
+  apt:
+    pkg:
+      - ruby
+      - ruby-dev
+      - make
+      - libssl-dev
+      - zlib1g-dev
+      - libicu-dev
+      - build-essential
+      - git
+      - cmake
+      - pkg-config
+    force_apt_get: true
+    update_cache: yes
+
+- name: Install gollum
+  gem:
+    name: gollum
+    user_install: no
+
+- name: Check gollum data dir
+  stat:
+    path: /home/gollum/data
+  register: gollum_data_dir
+
+- name: Create gollum user
+  user:
+    name: gollum
+  when: not gollum_data_dir.stat.exists
+
+- name: Init gollum data git dir
+  shell: git init /home/gollum/data
+  become: yes
+  become_user: gollum
+  when: not gollum_data_dir.stat.exists
+
+- name: Add post commit push hook
+  template:
+    src: git-config.j2
+    dest: /home/gollum/data/.git/config
+    mode: '0644'
+    owner: gollum
+    group: gollum
+
+- name: Add gollum config
+  template:
+    src: gollum-config.rb
+    dest: /home/gollum/data
+    mode: '0755'
+    owner: gollum
+    group: gollum
+
+- name: Create gollum service
+  template: 
+    src: gollum.service.j2 
+    dest: /lib/systemd/system/gollum.service 
+    mode: 644
+    
