@@ -58,3 +58,9 @@
     dest: /lib/systemd/system/gollum.service 
     mode: 644
     
+- name: reload service nginx
+  become: true
+  systemd:
+    name: gollum
+    state: restarted
+
